@@ -1,42 +1,24 @@
 package cmd
 
 import (
-	"bufio"
-	"fmt"
-	"net"
 	"strings"
+
+	"github.com/tanuj2909/in-memory-db/app/resp"
 )
 
-func HandleRequest(conn net.Conn, reader *bufio.Reader, line string) {
-	cmnd, args := HandleCommand(reader, line)
+var respHandler = resp.RESPHandler{}
 
-	switch strings.ToUpper(cmnd) {
+func RunCommand(args []string) []byte {
+	switch strings.ToUpper(args[0]) {
 	case "PING":
-		Ping(conn, args)
+		return Ping()
 	case "ECHO":
-		Echo(conn, args)
+		return Echo(args[1])
 	case "SET":
-		Set(conn, args)
+		return Set(args[1:]...)
 	case "GET":
-		Get(conn, args)
-	default:
-		conn.Write([]byte("-ERR unknown command\r\n"))
+		return Get(args[1])
 	}
-}
 
-func HandleCommand(reader *bufio.Reader, line string) (string, []string) {
-	numArgs := 0
-	fmt.Sscanf(line, "*%d", &numArgs)
-
-	args := make([]string, 0, numArgs)
-
-	for i := 0; i < numArgs; i++ {
-		reader.ReadString('\n')
-		arg, _ := reader.ReadString('\n')
-		args = append(args, strings.TrimSpace(arg))
-	}
-	if len(args) == 0 {
-		return "", []string{}
-	}
-	return args[0], args[1:]
+	return respHandler.Error.Encode("ERR unknown command\r\n")
 }

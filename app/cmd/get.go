@@ -1,22 +1,14 @@
 package cmd
 
 import (
-	"fmt"
-	"net"
-
 	"github.com/tanuj2909/in-memory-db/app/store"
 )
 
-func Get(conn net.Conn, args []string) {
-	if len(args) != 1 {
-		conn.Write([]byte("-ERR wrong number of argumnets\r\n"))
-		return
-	}
-	val, ok := store.Store.Get(args[0])
+func Get(key string) []byte {
+	val, ok := store.Store.Get(key)
 	if !ok {
-		conn.Write([]byte("$-1\r\n"))
-		return
+		return respHandler.Null.Encode()
 	}
-	resp := fmt.Sprintf("$%d\r\n%s\r\n", len(val), val)
-	conn.Write([]byte(resp))
+
+	return respHandler.BulkString.Encode(val)
 }

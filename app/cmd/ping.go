@@ -1,11 +1,12 @@
 package cmd
 
-import "net"
+import "fmt"
 
-func Ping(conn net.Conn, args []string) {
-	if len(args) != 0 {
-		conn.Write([]byte("-ERR wrong number of argumnets\r\n"))
-		return
+func Ping() []byte {
+	res, err := respHandler.String.Encode("PONG")
+	if err != nil {
+		fmt.Printf("Error encoding response: %s\n", err)
+		return respHandler.Null.Encode()
 	}
-	conn.Write([]byte("+PONG\r\n"))
+	return res
 }

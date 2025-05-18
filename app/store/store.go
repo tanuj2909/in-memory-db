@@ -15,13 +15,13 @@ type DBStore struct {
 	Data map[string]Item
 }
 
-func (s *DBStore) Set(key, value string, ttl int) {
+func (s *DBStore) Set(key, value string, ttl int64) {
 	s.Mu.Lock()
 	defer s.Mu.Unlock()
 
 	var expiresAt time.Time
 	if ttl > 0 {
-		expiresAt = time.Now().Add(time.Duration(ttl) * time.Millisecond)
+		expiresAt = time.Now().Add(time.Duration(ttl) * time.Second)
 	}
 
 	s.Data[key] = Item{

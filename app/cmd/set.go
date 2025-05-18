@@ -1,22 +1,29 @@
 package cmd
 
 import (
-	"fmt"
-	"net"
+	"strconv"
 	"strings"
 
 	"github.com/tanuj2909/in-memory-db/app/store"
 )
 
-func Set(conn net.Conn, args []string) {
-	if len(args) < 2 {
-		conn.Write([]byte("-ERR wrong number of argumnets\r\n"))
-		return
+func Set(args ...string) []byte {
+	if len(args) != 2 && len(args) != 4 {
+		return respHandler.Error.Encode("ERR wrong number of argumnets")
 	}
-	ttl := 0
-	if len(args) == 4 && strings.ToUpper(args[2]) == "EX" {
-		fmt.Sscanf(args[3], "%d", &ttl)
+	ttl := int64(0)
+	if len(args) == 4 {
+		if strings.ToUpper(args[2]) != "EX" {
+			return respHandler.Error.Encode("ERR wrong usage of set")
+		}
+		var err error
+		ttl, err = strconv.ParseInt(args[3], 10, 64)
+		if err != nil {
+			return respHandler.Error.Encode("ERR EX argument must be an integer")
+		}
 	}
+
 	store.Store.Set(args[0], args[1], ttl)
-	conn.Write([]byte("+OK\r\n"))
+	res, _ := respHandler.String.Encode("OK")
+	return res
 }

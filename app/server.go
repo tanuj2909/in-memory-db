@@ -1,13 +1,9 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"net"
 	"os"
-	"strings"
-
-	"github.com/tanuj2909/in-memory-db/app/cmd"
 )
 
 func main() {
@@ -35,10 +31,10 @@ func main() {
 
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
-	reader := bufio.NewReader(conn)
 
 	for {
-		line, err := reader.ReadString('\n')
+		buf := make([]byte, 1024)
+		n, err := conn.Read(buf)
 		if err != nil {
 			if err.Error() != "EOF" {
 				fmt.Println("error reading from connection: ", err)
@@ -46,8 +42,6 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
-		if strings.HasPrefix(line, "*") {
-			cmd.HandleRequest(conn, reader, line)
-		}
+		handleCommand(buf[:n], conn)
 	}
 }
