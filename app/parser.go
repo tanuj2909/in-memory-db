@@ -6,9 +6,10 @@ import (
 
 	"github.com/tanuj2909/in-memory-db/app/cmd"
 	"github.com/tanuj2909/in-memory-db/app/resp"
+	"github.com/tanuj2909/in-memory-db/app/types"
 )
 
-func handleCommand(buf []byte, conn net.Conn) {
+func handleCommand(buf []byte, conn net.Conn, state *types.ServerState) {
 	respHandler := resp.RESPHandler{}
 
 	arr, next, err := respHandler.DecodeCommand(buf)
@@ -16,7 +17,7 @@ func handleCommand(buf []byte, conn net.Conn) {
 		fmt.Printf("Error decoding command: %v\n", err)
 		return
 	}
-	res := cmd.RunCommand(arr)
+	res := cmd.RunCommand(arr, state)
 
 	_, err = conn.Write(res)
 
@@ -25,6 +26,6 @@ func handleCommand(buf []byte, conn net.Conn) {
 	}
 
 	if len(next) > 0 {
-		handleCommand(next, conn)
+		handleCommand(next, conn, state)
 	}
 }

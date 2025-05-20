@@ -4,11 +4,12 @@ import (
 	"strings"
 
 	"github.com/tanuj2909/in-memory-db/app/resp"
+	"github.com/tanuj2909/in-memory-db/app/types"
 )
 
 var respHandler = resp.RESPHandler{}
 
-func RunCommand(args []string) []byte {
+func RunCommand(args []string, state *types.ServerState) []byte {
 	switch strings.ToUpper(args[0]) {
 	case "PING":
 		return Ping()
@@ -18,6 +19,8 @@ func RunCommand(args []string) []byte {
 		return Set(args[1:]...)
 	case "GET":
 		return Get(args[1])
+	case "INFO":
+		return Info(state)
 	}
 
 	return respHandler.Error.Encode("ERR unknown command\r\n")

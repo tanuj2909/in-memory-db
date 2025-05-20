@@ -4,10 +4,33 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
+
+	"github.com/tanuj2909/in-memory-db/app/types"
+	"github.com/tanuj2909/in-memory-db/app/util"
 )
 
+func NewServerState(args *Args) *types.ServerState {
+	state := types.ServerState{
+		Role:             "master",
+		Port:             args.port,
+		MasterReplId:     util.RandomAlphanumeric(40),
+		MasterReplOffset: 0,
+	}
+
+	if args.replicaof != "" {
+		state.Role = "slave"
+		host := strings.Split(args.replicaof, " ")
+		state.MasterHost = host[0]
+		state.MasterPort = host[1]
+	}
+
+	return &state
+}
 func main() {
 	args := GetArgs()
+
+	serverState := NewServerState(&args)
 
 	l, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", args.port))
 
@@ -24,12 +47,12 @@ func main() {
 			fmt.Println("Error accepting connection: ", err)
 			continue
 		}
-		go handleConnection(conn)
+		go handleConnection(conn, serverState)
 
 	}
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, state *types.ServerState) {
 	defer conn.Close()
 
 	for {
@@ -42,6 +65,6 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
-		handleCommand(buf[:n], conn)
+		handleCommand(buf[:n], conn, state)
 	}
 }
