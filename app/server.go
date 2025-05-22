@@ -23,6 +23,9 @@ func NewServerState(args *Args) *types.ServerState {
 		host := strings.Split(args.replicaof, " ")
 		state.MasterHost = host[0]
 		state.MasterPort = host[1]
+		state.MasterReplId = "?"
+		state.MasterReplOffset = -1
+		handshakeWithMaster(&state)
 	}
 
 	return &state

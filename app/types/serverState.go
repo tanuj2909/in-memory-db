@@ -7,4 +7,5 @@ type ServerState struct {
 	MasterPort       string // empty for master
 	MasterReplId     string
 	MasterReplOffset int // 0 for master
+	Replicas         []Replica
 }

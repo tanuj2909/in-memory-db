@@ -17,7 +17,7 @@ func handleCommand(buf []byte, conn net.Conn, state *types.ServerState) {
 		fmt.Printf("Error decoding command: %v\n", err)
 		return
 	}
-	res := cmd.RunCommand(arr, state)
+	res := cmd.RunCommand(arr, state, conn)
 
 	_, err = conn.Write(res)
 
