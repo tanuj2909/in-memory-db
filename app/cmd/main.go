@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net"
 	"strings"
 
@@ -10,23 +11,28 @@ import (
 
 var respHandler = resp.RESPHandler{}
 
-func RunCommand(args []string, state *types.ServerState, conn net.Conn) []byte {
+func RunCommand(args []string, state *types.ServerState, conn net.Conn) {
+	var err error
 	switch strings.ToUpper(args[0]) {
 	case "PING":
-		return Ping()
+		_, err = conn.Write(Ping())
 	case "ECHO":
-		return Echo(args[1])
+		_, err = conn.Write(Echo(args[1]))
 	case "SET":
-		return Set(args[1:]...)
+		_, err = conn.Write(Set(args[1:]...))
 	case "GET":
-		return Get(args[1])
+		_, err = conn.Write(Get(args[1]))
 	case "INFO":
-		return Info(state)
+		_, err = conn.Write(Info(state))
 	case "REPLCONF":
-		return ReplConf(args[1:], state, conn)
+		_, err = conn.Write(ReplConf(args[1:], state, conn))
 	case "PSYNC":
-		return Psync(conn, state.MasterReplId, state.MasterReplOffset)
+		_, err = conn.Write(Psync(conn, state.MasterReplId, state.MasterReplOffset))
+	default:
+		_, err = conn.Write(respHandler.Error.Encode("ERR unknown command\r\n"))
 	}
 
-	return respHandler.Error.Encode("ERR unknown command\r\n")
+	if err != nil {
+		fmt.Printf("Error writing response to client: %v\n", err)
+	}
 }

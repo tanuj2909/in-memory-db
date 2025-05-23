@@ -55,7 +55,7 @@ func handshakeWithMaster(state *types.ServerState) {
 	}
 
 	//PSYNC <replicationid> <offset>
-	err = sendAndGetData(
+	rdbFile, remainingBytes, err := sendAndGetData(
 		masterConn,
 		[]string{"PSYNC", "?", fmt.Sprintf("%d", -1)},
 		respHandler,
@@ -66,38 +66,82 @@ func handshakeWithMaster(state *types.ServerState) {
 		fmt.Println("Failed to send PSYNC to master: ", err)
 		return
 	}
+
+	fmt.Println("RDB file: " + rdbFile)
+
+	if len(remainingBytes) > 0 {
+		handleCommand(remainingBytes, masterConn, state)
+	}
 }
 
-func sendAndGetData(conn net.Conn, msgArr []string, respHandler resp.RESPHandler, state *types.ServerState) error {
+func sendAndGetData(conn net.Conn, msgArr []string, respHandler resp.RESPHandler, state *types.ServerState) (string, []byte, error) {
 	bytes := respHandler.Array.Encode(msgArr)
 	conn.Write(bytes)
 
 	resp := make([]byte, 1024)
 	n, _ := conn.Read(resp)
-	res, remain, err := respHandler.String.Decode(resp[:n])
+	res, rdbBytes, err := respHandler.String.Decode(resp[:n])
 	if err != nil {
-		return fmt.Errorf("failed to decode response: %s", err)
-	}
-	if len(remain) > 0 {
-		return fmt.Errorf("unexpected remaining bytes: %q", remain)
+		return "", nil, fmt.Errorf("failed to decode response: %s", err)
 	}
 
 	responseParts := strings.Split(res, " ")
 	if len(responseParts) != 3 {
-		return fmt.Errorf("expected 3 parts in PSYNC response, got %d", len(responseParts))
+		return "", nil, fmt.Errorf("expected 3 parts in PSYNC response, got %d", len(responseParts))
 	}
 	if responseParts[0] != "FULLRESYNC" {
-		return fmt.Errorf("expected FULLRESYNC in PSYNC response, got %s", responseParts[0])
+		return "", nil, fmt.Errorf("expected FULLRESYNC in PSYNC response, got %s", responseParts[0])
 	}
 	state.MasterReplId = responseParts[1]
 	portAsInt, err := strconv.Atoi(responseParts[2])
 	if err != nil {
-		return fmt.Errorf("failed to convert port to int: %s", err)
+		return "", nil, fmt.Errorf("failed to convert port to int: %s", err)
 	}
 	state.MasterReplOffset = portAsInt
 
-	return nil
+	if len(rdbBytes) == 0 {
+		rdbBytes = make([]byte, 1024)
+		n, err := conn.Read(rdbBytes)
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to recieve message from master: %s", err)
+		}
+		rdbBytes = rdbBytes[:n]
+	}
 
+	fileContent, remainingBytes, err := parseFile(rdbBytes)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to parse RDB file: %s", err)
+	}
+	return fileContent, remainingBytes, nil
+
+}
+
+func parseFile(dataBytes []byte) (string, []byte, error) {
+	if dataBytes[0] != '$' {
+		return "", nil, fmt.Errorf("expected $ at the start of the datafile, got %s", string(dataBytes[0]))
+	}
+
+	// Parse the length of the data
+	lenStr := ""
+	for i := 1; i < len(dataBytes); i++ {
+		if dataBytes[i] == '\r' {
+			break
+		}
+		lenStr += string(dataBytes[i])
+	}
+	dataLen, err := strconv.Atoi(lenStr)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to convert data length to int: %s", err)
+	}
+
+	startIndex := len(lenStr) + 3 // $<len>\r\n
+	if len(dataBytes) < startIndex+dataLen {
+		return "", nil, fmt.Errorf("expected %d bytes of data, got %d", dataLen, len(dataBytes)-startIndex)
+	}
+	fileContentBytes := dataBytes[startIndex : startIndex+dataLen]
+	remainingBytes := dataBytes[startIndex+dataLen:]
+
+	return string(fileContentBytes), remainingBytes, nil
 }
 
 func sendAndAssertReply(conn net.Conn, msgArr []string, expectedMsg string, respHandler resp.RESPHandler) error {
