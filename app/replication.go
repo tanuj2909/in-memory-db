@@ -11,7 +11,7 @@ import (
 )
 
 func handshakeWithMaster(state *types.ServerState) {
-	masterConn, err := net.Dial("tcp", fmt.Sprintf("%s:%s", state.MasterHost, state.MasterPort))
+	masterConn, err := net.Dial("tcp", net.JoinHostPort(state.MasterHost, state.MasterPort))
 	if err != nil {
 		fmt.Println("Failed to connect to master: ", err)
 		return
@@ -69,8 +69,11 @@ func handshakeWithMaster(state *types.ServerState) {
 
 	fmt.Println("RDB file: " + rdbFile)
 
+	// handle master slave connection
+	go handleConnection(masterConn, state, true)
+
 	if len(remainingBytes) > 0 {
-		handleCommand(remainingBytes, masterConn, state)
+		handleCommand(remainingBytes, masterConn, state, true)
 	}
 }
 

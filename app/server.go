@@ -50,12 +50,12 @@ func main() {
 			fmt.Println("Error accepting connection: ", err)
 			continue
 		}
-		go handleConnection(conn, serverState)
+		go handleConnection(conn, serverState, false)
 
 	}
 }
 
-func handleConnection(conn net.Conn, state *types.ServerState) {
+func handleConnection(conn net.Conn, state *types.ServerState, isMaster bool) {
 	defer conn.Close()
 
 	for {
@@ -68,6 +68,6 @@ func handleConnection(conn net.Conn, state *types.ServerState) {
 			return
 		}
 
-		handleCommand(buf[:n], conn, state)
+		handleCommand(buf[:n], conn, state, isMaster)
 	}
 }

@@ -11,7 +11,7 @@ import (
 
 var respHandler = resp.RESPHandler{}
 
-func RunCommand(args []string, state *types.ServerState, conn net.Conn) {
+func RunCommand(args []string, state *types.ServerState, conn net.Conn, buf []byte, isMaster bool) {
 	var err error
 	switch strings.ToUpper(args[0]) {
 	case "PING":
@@ -19,7 +19,8 @@ func RunCommand(args []string, state *types.ServerState, conn net.Conn) {
 	case "ECHO":
 		_, err = conn.Write(Echo(args[1]))
 	case "SET":
-		_, err = conn.Write(Set(args[1:]...))
+		_, err = conn.Write(Set(isMaster, args[1:]...))
+		streamToReplicas(state.Replicas, buf)
 	case "GET":
 		_, err = conn.Write(Get(args[1]))
 	case "INFO":
@@ -34,5 +35,14 @@ func RunCommand(args []string, state *types.ServerState, conn net.Conn) {
 
 	if err != nil {
 		fmt.Printf("Error writing response to client: %v\n", err)
+	}
+}
+
+func streamToReplicas(replicas []types.Replica, buf []byte) {
+	for _, replica := range replicas {
+		_, err := replica.Conn.Write(buf)
+		if err != nil {
+			fmt.Printf("falied to write to replica: %v\n", err.Error())
+		}
 	}
 }

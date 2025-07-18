@@ -9,7 +9,7 @@ import (
 	"github.com/tanuj2909/in-memory-db/app/types"
 )
 
-func handleCommand(buf []byte, conn net.Conn, state *types.ServerState) {
+func handleCommand(buf []byte, conn net.Conn, state *types.ServerState, isMaster bool) {
 	respHandler := resp.RESPHandler{}
 
 	arr, next, err := respHandler.DecodeCommand(buf)
@@ -17,9 +17,10 @@ func handleCommand(buf []byte, conn net.Conn, state *types.ServerState) {
 		fmt.Printf("Error decoding command: %v\n", err)
 		return
 	}
-	cmd.RunCommand(arr, state, conn)
+
+	cmd.RunCommand(arr, state, conn, buf, isMaster)
 
 	if len(next) > 0 {
-		handleCommand(next, conn, state)
+		handleCommand(next, conn, state, isMaster)
 	}
 }

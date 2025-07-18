@@ -7,7 +7,8 @@ import (
 	"github.com/tanuj2909/in-memory-db/app/store"
 )
 
-func Set(args ...string) []byte {
+func Set(isMaster bool, args ...string) []byte {
+	shouldReply := !isMaster
 	if len(args) != 2 && len(args) != 4 {
 		return respHandler.Error.Encode("ERR wrong number of argumnets")
 	}
@@ -24,6 +25,10 @@ func Set(args ...string) []byte {
 	}
 
 	store.Store.Set(args[0], args[1], ttl)
-	res, _ := respHandler.String.Encode("OK")
-	return res
+	if shouldReply {
+		res, _ := respHandler.String.Encode("OK")
+		return res
+	}
+
+	return nil
 }
