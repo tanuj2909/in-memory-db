@@ -8,4 +8,6 @@ type ServerState struct {
 	MasterReplId     string
 	MasterReplOffset int // 0 for master
 	Replicas         []Replica
+	AckOffset        int // offset of the last acknowledged replication message (only for slaves)
+	BytesSent        int // number of bytes sent to replicas (only for masters)
 }

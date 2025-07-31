@@ -15,12 +15,15 @@ func RunCommand(args []string, state *types.ServerState, conn net.Conn, buf []by
 	var err error
 	switch strings.ToUpper(args[0]) {
 	case "PING":
-		_, err = conn.Write(Ping())
+		_, err = conn.Write(Ping(isMaster))
 	case "ECHO":
 		_, err = conn.Write(Echo(args[1]))
 	case "SET":
 		_, err = conn.Write(Set(isMaster, args[1:]...))
-		streamToReplicas(state.Replicas, buf)
+		if state.Role == "master" {
+			state.BytesSent += len(buf)
+			streamToReplicas(state.Replicas, buf)
+		}
 	case "GET":
 		_, err = conn.Write(Get(args[1]))
 	case "INFO":
@@ -29,6 +32,8 @@ func RunCommand(args []string, state *types.ServerState, conn net.Conn, buf []by
 		_, err = conn.Write(ReplConf(args[1:], state, conn))
 	case "PSYNC":
 		_, err = conn.Write(Psync(conn, state.MasterReplId, state.MasterReplOffset))
+	case "WAIT":
+		_, err = conn.Write(Wait(conn, state, args[1:]...))
 	default:
 		_, err = conn.Write(respHandler.Error.Encode("ERR unknown command\r\n"))
 	}

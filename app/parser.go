@@ -20,6 +20,10 @@ func handleCommand(buf []byte, conn net.Conn, state *types.ServerState, isMaster
 
 	cmd.RunCommand(arr, state, conn, buf, isMaster)
 
+	if isMaster {
+		state.AckOffset += len(buf)
+	}
+
 	if len(next) > 0 {
 		handleCommand(next, conn, state, isMaster)
 	}
