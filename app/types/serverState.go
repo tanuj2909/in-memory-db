@@ -10,4 +10,7 @@ type ServerState struct {
 	Replicas         []Replica
 	AckOffset        int // offset of the last acknowledged replication message (only for slaves)
 	BytesSent        int // number of bytes sent to replicas (only for masters)
+
+	DBDir      string
+	DBFileName string
 }

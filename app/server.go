@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/tanuj2909/in-memory-db/app/file"
 	"github.com/tanuj2909/in-memory-db/app/types"
 	"github.com/tanuj2909/in-memory-db/app/util"
 )
@@ -16,6 +17,9 @@ func NewServerState(args *Args) *types.ServerState {
 		Port:             args.port,
 		MasterReplId:     util.RandomAlphanumeric(40),
 		MasterReplOffset: 0,
+
+		DBDir:      args.dir,
+		DBFileName: args.dbfilename,
 	}
 
 	if args.replicaof != "" {
@@ -26,6 +30,10 @@ func NewServerState(args *Args) *types.ServerState {
 		state.MasterReplId = "?"
 		state.MasterReplOffset = -1
 		handshakeWithMaster(&state)
+	}
+
+	if state.Role == "master" {
+		file.InitDB(args.dir, args.dbfilename)
 	}
 
 	return &state
