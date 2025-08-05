@@ -1,6 +1,7 @@
 package store
 
 import (
+	"strconv"
 	"sync"
 	"time"
 )
@@ -45,4 +46,29 @@ func (s *DBStore) Get(key string) (string, bool) {
 		return "", false
 	}
 	return item.Value, ok
+}
+
+func (s *DBStore) Incr(key string) (int, bool) {
+	s.Mu.Lock()
+	defer s.Mu.Unlock()
+
+	item, ok := s.Data[key]
+	if !ok || (!item.ExpiresAt.IsZero() && time.Now().After(item.ExpiresAt)) {
+		item.ExpiresAt = time.Time{}
+		item.Value = "1"
+		s.Data[key] = item
+		return 1, true
+	}
+
+	intVal, err := strconv.Atoi(item.Value)
+	if err != nil {
+		return 0, false
+	}
+
+	intVal += 1
+	item.Value = strconv.Itoa(intVal)
+	s.Data[key] = item
+
+	return intVal, true
+
 }

@@ -36,6 +36,8 @@ func RunCommand(args []string, state *types.ServerState, conn net.Conn, buf []by
 		_, err = conn.Write(Wait(conn, state, args[1:]...))
 	case "CONFIG":
 		_, err = conn.Write(Config(state, args[1:]...))
+	case "INCR":
+		_, err = conn.Write(Incr(args[1]))
 	default:
 		_, err = conn.Write(respHandler.Error.Encode("ERR unknown command\r\n"))
 	}
