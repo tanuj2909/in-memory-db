@@ -1,5 +1,10 @@
 package types
 
+import (
+	"net"
+	"sync"
+)
+
 type ServerState struct {
 	Port             int
 	Role             string // master | slave
@@ -13,4 +18,7 @@ type ServerState struct {
 
 	DBDir      string
 	DBFileName string
+
+	Transactions     map[net.Conn]TransactionData
+	TransactionMutex sync.Mutex
 }

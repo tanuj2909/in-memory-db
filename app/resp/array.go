@@ -15,6 +15,16 @@ func (array) Encode(arr []string) []byte {
 	return byteSlice
 }
 
+func (array) EncodeFromBytes(arr [][]byte) []byte {
+	byteSlice := []byte("*" + fmt.Sprintf("%d", len(arr)) + "\r\n")
+
+	for _, bytes := range arr {
+		byteSlice = append(byteSlice, bytes...)
+	}
+
+	return byteSlice
+}
+
 func (array) Decode(b []byte) ([]string, []byte, error) {
 	if b[0] != '*' {
 		return nil, b, fmt.Errorf("invalid format for array: expected the first byte to be '*', got '%q'", b[0])

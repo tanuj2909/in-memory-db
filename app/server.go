@@ -20,6 +20,8 @@ func NewServerState(args *Args) *types.ServerState {
 
 		DBDir:      args.dir,
 		DBFileName: args.dbfilename,
+
+		Transactions: map[net.Conn]types.TransactionData{},
 	}
 
 	if args.replicaof != "" {

@@ -11,40 +11,38 @@ import (
 
 var respHandler = resp.RESPHandler{}
 
-func RunCommand(args []string, state *types.ServerState, conn net.Conn, buf []byte, isMaster bool) {
-	var err error
+func RunCommand(args []string, state *types.ServerState, conn net.Conn, buf []byte, isMaster bool) []byte {
+	var res []byte
 	switch strings.ToUpper(args[0]) {
 	case "PING":
-		_, err = conn.Write(Ping(isMaster))
+		res = Ping(isMaster)
 	case "ECHO":
-		_, err = conn.Write(Echo(args[1]))
+		res = Echo(args[1])
 	case "SET":
-		_, err = conn.Write(Set(isMaster, args[1:]...))
+		res = Set(isMaster, args[1:]...)
 		if state.Role == "master" {
 			state.BytesSent += len(buf)
 			streamToReplicas(state.Replicas, buf)
 		}
 	case "GET":
-		_, err = conn.Write(Get(args[1]))
+		res = Get(args[1])
 	case "INFO":
-		_, err = conn.Write(Info(state))
+		res = Info(state)
 	case "REPLCONF":
-		_, err = conn.Write(ReplConf(args[1:], state, conn))
+		res = ReplConf(args[1:], state, conn)
 	case "PSYNC":
-		_, err = conn.Write(Psync(conn, state.MasterReplId, state.MasterReplOffset))
+		res = Psync(conn, state.MasterReplId, state.MasterReplOffset)
 	case "WAIT":
-		_, err = conn.Write(Wait(conn, state, args[1:]...))
+		res = Wait(conn, state, args[1:]...)
 	case "CONFIG":
-		_, err = conn.Write(Config(state, args[1:]...))
+		res = Config(state, args[1:]...)
 	case "INCR":
-		_, err = conn.Write(Incr(args[1]))
+		res = Incr(args[1])
 	default:
-		_, err = conn.Write(respHandler.Error.Encode("ERR unknown command\r\n"))
+		res = respHandler.Error.Encode("ERR unknown command\r\n")
 	}
 
-	if err != nil {
-		fmt.Printf("Error writing response to client: %v\n", err)
-	}
+	return res
 }
 
 func streamToReplicas(replicas []types.Replica, buf []byte) {
