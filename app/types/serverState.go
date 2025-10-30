@@ -5,6 +5,11 @@ import (
 	"sync"
 )
 
+type StreamItem struct {
+	ID string
+	KV map[string][]string
+}
+
 type ServerState struct {
 	Port             int
 	Role             string // master | slave
@@ -21,4 +26,6 @@ type ServerState struct {
 
 	Transactions     map[net.Conn]TransactionData
 	TransactionMutex sync.Mutex
+
+	Streams map[string][]StreamItem
 }
