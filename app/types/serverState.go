@@ -5,9 +5,9 @@ import (
 	"sync"
 )
 
-type StreamItem struct {
+type StreamEntry struct {
 	ID string
-	KV map[string][]string
+	KV map[string]string
 }
 
 type ServerState struct {
@@ -27,5 +27,5 @@ type ServerState struct {
 	Transactions     map[net.Conn]TransactionData
 	TransactionMutex sync.Mutex
 
-	Streams map[string][]StreamItem
+	Streams map[string][]StreamEntry
 }

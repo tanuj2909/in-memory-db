@@ -22,7 +22,7 @@ func NewServerState(args *Args) *types.ServerState {
 		DBFileName: args.dbfilename,
 
 		Transactions: map[net.Conn]types.TransactionData{},
-		Streams:      map[string][]types.StreamItem{},
+		Streams:      map[string][]types.StreamEntry{},
 	}
 
 	if args.replicaof != "" {

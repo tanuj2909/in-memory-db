@@ -13,7 +13,7 @@ import (
 func XADD(server *types.ServerState, args ...string) []byte {
 	if len(args) < 4 {
 		return respHandler.Error.Encode(
-			fmt.Sprintf("ERR wrong number of arguments for '%s' command, expected at least 4, for %s", args[0], len(args)),
+			fmt.Sprintf("ERR wrong number of arguments for '%s' command, expected at least 4, for %d", args[0], len(args)),
 		)
 	}
 
