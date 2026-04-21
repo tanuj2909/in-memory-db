@@ -44,6 +44,8 @@ func RunCommand(args []string, state *types.ServerState, conn net.Conn, buf []by
 		res = XADD(state, args[1:]...)
 	case "XRANGE":
 		res = Xrange(state, args[1:]...)
+	case "XREAD":
+		res = Xread(state, args[1:]...)
 	default:
 		res = respHandler.Error.Encode("ERR unknown command\r\n")
 	}
