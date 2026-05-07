@@ -39,7 +39,13 @@ func RunCommand(args []string, state *types.ServerState, conn net.Conn, buf []by
 	case "INCR":
 		res = Incr(args[1])
 	case "TYPE":
-		res = Type(args[1:]...)
+		res = Type(state, args[1:]...)
+	case "ZADD":
+		res = ZADD(state, args[1:]...)
+	case "ZRANK":
+		res = ZRANK(state, args[1:]...)
+	case "ZRANGE":
+		res = ZRANGE(state, args[1:]...)
 	case "XADD":
 		res = XADD(state, args[1:]...)
 	case "XRANGE":

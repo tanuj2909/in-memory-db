@@ -23,6 +23,7 @@ func NewServerState(args *Args) *types.ServerState {
 
 		Transactions: map[net.Conn]types.TransactionData{},
 		Streams:      map[string][]types.StreamEntry{},
+		SortedSets:   map[string][]types.SortedSetEntry{},
 	}
 
 	if args.replicaof != "" {

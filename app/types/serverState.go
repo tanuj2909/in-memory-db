@@ -10,6 +10,11 @@ type StreamEntry struct {
 	KV map[string]string
 }
 
+type SortedSetEntry struct {
+	Member string
+	Score  float64
+}
+
 type ServerState struct {
 	Port             int
 	Role             string // master | slave
@@ -27,5 +32,8 @@ type ServerState struct {
 	Transactions     map[net.Conn]TransactionData
 	TransactionMutex sync.Mutex
 
-	Streams map[string][]StreamEntry
+	Streams    map[string][]StreamEntry
+	SortedSets map[string][]SortedSetEntry
+
+	Channel map[string][]net.Conn
 }
