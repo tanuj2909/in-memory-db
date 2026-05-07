@@ -15,6 +15,11 @@ type SortedSetEntry struct {
 	Score  float64
 }
 
+type GeoPoint struct {
+	Lon float64
+	Lat float64
+}
+
 type ServerState struct {
 	Port             int
 	Role             string // master | slave
@@ -34,6 +39,7 @@ type ServerState struct {
 
 	Streams    map[string][]StreamEntry
 	SortedSets map[string][]SortedSetEntry
+	GeoSets    map[string]map[string]GeoPoint
 
 	Channel map[string][]net.Conn
 }

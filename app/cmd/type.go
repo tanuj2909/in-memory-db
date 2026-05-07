@@ -24,6 +24,10 @@ func Type(server *types.ServerState, args ...string) []byte {
 		res, _ := respHandler.String.Encode("zset")
 		return res
 	}
+	if _, ok := server.GeoSets[key]; ok {
+		res, _ := respHandler.String.Encode("zset")
+		return res
+	}
 
 	res, _ := respHandler.String.Encode("none")
 	return res

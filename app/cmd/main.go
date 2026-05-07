@@ -46,6 +46,14 @@ func RunCommand(args []string, state *types.ServerState, conn net.Conn, buf []by
 		res = ZRANK(state, args[1:]...)
 	case "ZRANGE":
 		res = ZRANGE(state, args[1:]...)
+	case "GEOADD":
+		res = GEOADD(state, args[1:]...)
+	case "GEOPOS":
+		res = GEOPOS(state, args[1:]...)
+	case "GEODIST":
+		res = GEODIST(state, args[1:]...)
+	case "GEOSEARCH":
+		res = GEOSEARCH(state, args[1:]...)
 	case "XADD":
 		res = XADD(state, args[1:]...)
 	case "XRANGE":
